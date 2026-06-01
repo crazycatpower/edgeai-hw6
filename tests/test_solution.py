@@ -3,8 +3,10 @@
 # Tatung University — I4210 AI實務專題
 
 import pytest
+from unittest.mock import patch
+import io
 
-from src.solution import add
+from src.solution import add, main
 
 
 def test_add_positive():
@@ -13,3 +15,9 @@ def test_add_positive():
 
 def test_add_negative():
     assert add(-1, 1) == 0
+
+
+def test_main_prints_3(capsys):
+    main()
+    captured = capsys.readouterr()
+    assert "3" in captured.out
