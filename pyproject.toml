@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "edgeai-hw6"
+version = "1.0.0"
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--tb=short"
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["src/__init__.py"]
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+strict = false
+
+[tool.bandit]
+skips = []
+targets = ["src"]
+
+[tool.pylint.messages_control]
+disable = ["C0114", "C0115", "C0116", "R0903"]
+
+[tool.pylint.basic]
+good-names = ["i", "f", "h"]
+
+[tool.pdm.scripts]
+lint-format = "ruff format --check ."
+lint-ruff = "ruff check ."
+typecheck = "mypy src/"
+security = "bandit -r src/ -ll"
+pylint = "pylint --fail-under=7.0 src/"
+test = "pytest tests/ --ignore=tests/integration --cov=src --cov-fail-under=90"
+ci = {composite = ["lint-format", "lint-ruff", "typecheck", "security", "pylint", "test"]}

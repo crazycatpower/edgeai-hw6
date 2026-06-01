@@ -1,0 +1,27 @@
+# Copyright (c) 2026 <Your Name(s)>
+# Tatung University — I4210 AI實務專題
+
+path: /home/jetson/edgeai-hw6/calibration/calibration_data
+train: train/images
+val: valid/images
+test: test/images
+
+nc: 17
+names:
+  - Barricade
+  - Dumpster
+  - EXCAVATORS
+  - Gloves
+  - Hardhat
+  - Mask
+  - NO-Hardhat
+  - NO-Mask
+  - NO-Safety Vest
+  - Person
+  - Safety Net
+  - Safety Shoes
+  - Safety Vest
+  - dump truck
+  - mini-van
+  - truck
+  - wheel loader

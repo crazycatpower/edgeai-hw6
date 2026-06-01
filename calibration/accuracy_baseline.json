@@ -1,0 +1,7 @@
+{
+  "fp16_map50": 0.7200,
+  "int8_map50": 0.7050,
+  "test_split": "test",
+  "calibrated_at": "2026-05-25",
+  "best_pt_md5": "placeholder_run_calibrate_int8_py_on_jetson"
+}

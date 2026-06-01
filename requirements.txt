@@ -1,0 +1,10 @@
+pytest
+pytest-cov
+pytest-timeout
+ruff
+mypy
+bandit
+pylint
+numpy
+opencv-python-headless
+paho-mqtt

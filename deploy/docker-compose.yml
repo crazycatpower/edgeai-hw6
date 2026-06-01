@@ -1,0 +1,24 @@
+# Copyright (c) 2026 <Your Name(s)>
+# Tatung University — I4210 AI實務專題
+
+version: "3.8"
+
+services:
+  edgeai:
+    image: ghcr.io/${GITHUB_REPOSITORY:-unknown/edgeai-hw6}:${IMAGE_TAG:-latest}
+    runtime: nvidia
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - lab12-models:/opt/models
+      - ../models/test_video.mp4:/opt/data/test_video.mp4:ro
+      - /var/lib/nvpmodel/status:/var/lib/nvpmodel/status:ro
+      - /etc/nvpmodel.conf:/etc/nvpmodel.conf:ro
+    environment:
+      - MODEL_PATH=/opt/models/best_int8.engine
+      - MQTT_HOST=localhost
+      - MQTT_PORT=1883
+
+volumes:
+  lab12-models:
+    external: true
