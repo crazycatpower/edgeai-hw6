@@ -162,15 +162,15 @@ For N Jetson devices:
 
 ---
 
-### Member 2
+### 李軒杰
 
-**Parts completed**: Part C (Jetson integration test), Part D (tag deployment), Part E (rollback), Part F (documentation)
+**Parts completed**: Part B（CI workflow 五段圖修正與 ARM64 交叉編譯設定）、Part C（integration test 診斷與修正）、Part D（deploy.yml 建置與 SSH 部署邏輯）、Part E（rollback.sh 串接）、Part F（文件合規審查與 Submission Evidence）、Code Quality（bandit 設定、paho-mqtt 2.x API 修正、ruff 合規維護）
 
-**Hardest technical problem**: The `healthcheck.sh` polling logic. First version used a simple `curl || exit 1` which failed intermittently because the TensorRT engine takes 3–8 minutes to compile on first run. Rewrote to poll every 5 seconds for up to 60 seconds, requiring 3 consecutive successes. This eliminated all false positives.
+**Hardest technical problem**: Integration test 連續失敗了三輪。第一輪是 `Connection refused`，完全看不出原因；第二輪才在 test fixture 裡加入 `docker logs` 診斷，才發現是 paho-mqtt 2.0 把 `mqtt.Client(client_id)` 改成需要顯式傳入 `callback_api_version`，導致 `InferenceNode()` 的 constructor 直接拋 `ValueError`，整個 container process 崩潰，healthz daemon thread 跟著消失，所以一直是 Connection refused。關鍵修正是把 `InferenceNode()` 建構也包進 `try/except`，確保 constructor 失敗時 process 依然存活、healthz 繼續回應。
 
-**What I learned**: `nvpmodel` in a Docker container requires bind-mounting `/var/lib/nvpmodel/status` and `/etc/nvpmodel.conf` — reading these files is much more reliable than running `nvpmodel -q` inside a container where the command may not be available.
+**What I learned**: `bandit -r src/ -ll` 不會自動讀取 `pyproject.toml`，必須加 `-c pyproject.toml` 才會套用 `[tool.bandit] skips`，沒加的話自訂的例外設定完全無效。另外 `docker/setup-buildx-action` 預設會從 Docker Hub 拉 `moby/buildkit` 映像，GitHub hosted runner 遇到 Docker Hub rate limit 就會逾時；加上 `mirror.gcr.io` 作為 Docker Hub mirror 後才穩定解決。
 
-**What I'd do differently**: Use `docker compose watch` for local development to avoid the build-push-pull cycle during iteration. Also would set up the production environment protection rule on Day 1 — accidentally deploying broken code to the device before protection was configured cost us an hour of debugging.
+**What I'd do differently**: 在寫 integration test 之前，先在 Jetson 本地手動跑一次 `docker run` 並觀察 `docker logs`，能比在 CI 上盲目 debug 省下大量時間。CI 每跑一次 build job 就要等 5 分鐘 QEMU 編譯，早一步在本地確認問題會讓整體效率高很多。
 
 ---
 
