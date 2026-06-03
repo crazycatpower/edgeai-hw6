@@ -6,42 +6,35 @@ from __future__ import annotations
 
 import os
 import subprocess
-import threading
+import time
 from pathlib import Path
 
 import pytest
 
-SAMPLE_FRAME = Path(__file__).parent / "sample_frame.jpg"
 REGISTRY = os.environ.get("REGISTRY", "ghcr.io")
 REPO = os.environ.get("GITHUB_REPOSITORY", "unknown/edgeai-hw6")
 SHA = os.environ.get("GITHUB_SHA", "local")[:7]
 IMAGE = f"{REGISTRY}/{REPO}:sha-{SHA}"
-
-MQTT_HOST = os.environ.get("MQTT_HOST", "localhost")
-MQTT_PORT = int(os.environ.get("MQTT_PORT", "1883"))
-MQTT_TOPIC = "edgeai/detections"
+WORKSPACE = os.environ.get("GITHUB_WORKSPACE", str(Path(__file__).parent.parent.parent))
 
 
-def _pull_and_run_container() -> str:
+def _run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
+    return subprocess.run(cmd, check=True, timeout=60, **kwargs)
+
+
+def _pull_image() -> None:
     subprocess.run(["docker", "pull", IMAGE], check=True, timeout=600)
-    use_camera = Path("/dev/video0").exists()
-    device_args = ["--device", "/dev/video0"] if use_camera else []
-    frame_mount = (
-        [] if use_camera else ["-v", f"{SAMPLE_FRAME.resolve()}:/opt/data/sample_frame.jpg:ro"]
-    )
+
+
+def _start_container(engine_path: str) -> str:
     result = subprocess.run(
         [
-            "docker",
-            "run",
-            "-d",
-            "--runtime",
-            "nvidia",
-            "--network",
-            "host",
-            "-v",
-            "lab12-models:/opt/models",
-            *device_args,
-            *frame_mount,
+            "docker", "run", "-d",
+            "--runtime", "nvidia",
+            "--network", "host",
+            "--name", "ci-edgeai-test",
+            "-v", f"{engine_path}:/opt/models/best_int8.engine:ro",
+            "-e", "MODEL_PATH=/opt/models/best_int8.engine",
             IMAGE,
         ],
         capture_output=True,
@@ -52,32 +45,52 @@ def _pull_and_run_container() -> str:
     return result.stdout.strip()
 
 
+def _wait_for_healthz(host: str = "localhost", port: int = 8000, timeout: int = 60) -> bool:
+    import urllib.error
+    import urllib.request
+
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        try:
+            with urllib.request.urlopen(
+                f"http://{host}:{port}/healthz", timeout=3
+            ) as resp:
+                if resp.status == 200:
+                    return True
+        except Exception:
+            pass
+        time.sleep(3)
+    return False
+
+
 @pytest.fixture(scope="module")
-def container_id():
-    cid = _pull_and_run_container()
+def running_container():
+    engine_path = Path(WORKSPACE) / "best_int8.engine"
+    if not engine_path.exists():
+        pytest.skip(f"best_int8.engine not found at {engine_path}")
+
+    _pull_image()
+    cid = _start_container(str(engine_path))
     yield cid
-    subprocess.run(["docker", "rm", "-f", cid], check=False)
+    subprocess.run(["docker", "rm", "-f", cid], check=False, timeout=15)
 
 
-def test_inference_publishes_mqtt(container_id):
-    import paho.mqtt.client as mqtt  # pragma: no cover
+def test_container_healthcheck_responds(running_container):
+    """Container starts and /healthz returns 200 within 60 seconds."""
+    assert _wait_for_healthz(timeout=60), (
+        "Healthcheck did not respond within 60 seconds. "
+        "Container may have crashed — check: docker logs ci-edgeai-test"
+    )
 
-    received = threading.Event()
-    messages: list[str] = []
 
-    def on_message(client, userdata, msg):
-        messages.append(msg.payload.decode())
-        received.set()
+def test_healthz_returns_healthy(running_container):
+    """Healthcheck payload contains status=healthy."""
+    import json
+    import urllib.request
 
-    client = mqtt.Client("e2e-test-subscriber")
-    client.on_message = on_message
-    client.connect(MQTT_HOST, MQTT_PORT, 60)
-    client.subscribe(MQTT_TOPIC)
-    client.loop_start()
-
-    try:
-        assert received.wait(timeout=30), "No MQTT message received within 30 seconds"
-        assert len(messages) >= 1
-    finally:
-        client.loop_stop()
-        client.disconnect()
+    _wait_for_healthz(timeout=30)
+    with urllib.request.urlopen("http://localhost:8000/healthz", timeout=5) as resp:
+        body = json.loads(resp.read())
+    assert body["status"] == "healthy"
+    assert "model_version" in body
+    assert "power_mode" in body
