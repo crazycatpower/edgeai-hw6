@@ -58,7 +58,7 @@ class HealthCheckServer:
         self._server: HTTPServer | None = None
 
     def start(self) -> None:
-        self._server = HTTPServer(("0.0.0.0", self._port), _HealthHandler)
+        self._server = HTTPServer(("", self._port), _HealthHandler)
         logger.info("HealthCheck listening on port %d", self._port)
         self._server.serve_forever()
 
