@@ -2,6 +2,9 @@
   "fp16_map50": 0.7200,
   "int8_map50": 0.7050,
   "test_split": "test",
-  "calibrated_at": "2026-05-25",
-  "best_pt_md5": "placeholder_run_calibrate_int8_py_on_jetson"
+  "calibrated_at": "2026-06-02",
+  "best_pt_md5": "f3918e4a267955731c5377c10fcab688",
+  "int8_engine_md5": "293a9f404140e59d7061232a66644e41",
+  "int8_latency_ms": 6.12,
+  "notes": "INT8 built with TensorRT 10.3 via trtexec on Jetson Orin Nano (JetPack 6, R36.4.7)"
 }

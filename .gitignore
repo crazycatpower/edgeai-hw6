@@ -9,5 +9,5 @@ dist/
 build/
 .mypy_cache/
 calibration/calibration_data/
-*.engine
-*.pt
+best.pt
+# best_int8.engine is committed (Part 0 deliverable)

@@ -97,25 +97,16 @@ edgeai-hw6/
 
 **在 Jetson 上執行，可與 Step 0.0 + 0.6 合併一次 SSH session**
 
-- [ ] 確認 `best.pt` 是 HW5 fine-tuned 版（md5sum 比對）
-- [ ] 從 HW5 dataset 隨機取樣 ~500 張到 `calibration/calibration_data/`
-- [ ] 建立 `calibration/calibrate_int8.py`（`Int8Calibrator` 類別）
-- [ ] 建立 `calibration/calibration.yaml`（nc: 25，names 對應 Lab 9）
-- [ ] 執行校準：`python3 calibration/calibrate_int8.py`
-- [ ] 測量 FP16 vs INT8 的 mAP@50（用 test split）
-- [ ] 填寫 `calibration/accuracy_baseline.json`：
-  ```json
-  {
-    "fp16_map50": 0.xxxx,
-    "int8_map50": 0.xxxx,
-    "test_split": "...",
-    "calibrated_at": "2026-xx-xx",
-    "best_pt_md5": "..."
-  }
-  ```
-- [ ] 提交 `best_int8.engine`（約 7MB）
-- [ ] 寫 `calibration/README.md`（如何重新校準）
-- [ ] 寫 README §"Optimization (INT8 vs FP16)"
+- [x] 確認 `best.pt` 是 HW5 fine-tuned 版（md5sum: f3918e4a267955731c5377c10fcab688）
+- [x] 從 HW5 dataset 連結到 `calibration/calibration_data/`（307張 train + 34張 test）
+- [x] 建立 `calibration/calibrate_int8.py`（`Int8Calibrator` 類別）
+- [x] 建立 `calibration/calibration.yaml`（nc: 17，construction safety dataset）
+- [x] 執行校準：trtexec --int8 via DeepStream container（TRT 10.3）
+- [ ] 測量 FP16 vs INT8 的 mAP@50（FP16 評估進行中）
+- [x] 填寫 `calibration/accuracy_baseline.json`（md5 + latency 已填，mAP 待補真實值）
+- [x] 提交 `best_int8.engine`（4.4MB，待 push）
+- [x] 寫 `calibration/README.md`（如何重新校準）
+- [x] 寫 README §"Optimization (INT8 vs FP16)"
 
 **評分標準**：
 - INT8 engine 用真實校準產生：4分
@@ -129,32 +120,33 @@ edgeai-hw6/
 **在 laptop 上開發，不需要 Jetson**
 
 #### A1 — 重構 `src/inference_node.py`
-- [ ] 抽出 `src/mqtt_publisher.py`（`MqttPublisher` 類別 + `PublisherConfig`）
-- [ ] YOLO/ultralytics import 改為 lazy（在函式內才 import，加 `# pragma: no cover`）
-- [ ] cv2, paho 可以繼續在模組頂部 import（有 x86 wheel）
-- [ ] `inference_node.py` 使用 `client_factory` 注入（dependency injection）
+- [x] 抽出 `src/mqtt_publisher.py`（`MqttPublisher` 類別 + `PublisherConfig`）
+- [x] YOLO/ultralytics import 改為 lazy（在函式內才 import，加 `# pragma: no cover`）
+- [x] cv2, paho 可以繼續在模組頂部 import（有 x86 wheel）
+- [x] `inference_node.py` 使用 `client_factory` 注入（dependency injection）
 
 #### A2 — `tests/test_mqtt.py`（≥4 tests）
-- [ ] 用 `MagicMock` 替代真實 paho client
-- [ ] 測試：JSON payload 發送、disconnected 時回傳 False、字串 payload 不重複編碼、disconnect 停止 loop
+- [x] 用 `MagicMock` 替代真實 paho client（6個測試）
+- [x] 測試：JSON payload 發送、disconnected 時回傳 False、字串 payload 不重複編碼、disconnect 停止 loop
 
 #### A3 — `tests/test_inference.py`（≥6 tests）
-- [ ] 使用 `@pytest.mark.parametrize`
-- [ ] 用 `pytest.fixture` mock `cv2.VideoCapture`
-- [ ] 測試：preprocess_frame 輸出形狀、灰階輸入處理、confidence threshold 過濾、payload 格式
+- [x] 使用 `@pytest.mark.parametrize`（多組測試）
+- [x] 用 `MagicMock` mock 推理結果
+- [x] 測試：preprocess_frame 輸出形狀、灰階輸入處理、confidence threshold 過濾、payload 格式（7個測試）
 
 #### A4 — Coverage gate
-- [ ] 確認 `pyproject.toml` 有 `fail_under = 90`
-- [ ] 本地跑：`pytest tests/ --ignore=tests/integration --cov=src --cov-fail-under=90`
+- [x] 確認 `pyproject.toml` 有 `fail_under = 90`
+- [x] 本地跑結果：**32 passed, coverage 98%** ✅
 
 #### A5 — `tests/test_accuracy.py` + 示範 PR
-- [ ] 讀 `calibration/accuracy_baseline.json`，assert `fp16 - int8 <= 0.02`
-- [ ] 用 `@pytest.mark.skipif` 讓沒有 baseline 時跳過（不阻擋早期 CI）
-- [ ] 做示範 PR：把 int8_map50 改成比 fp16 低 5pts → CI 失敗 → 恢復 → CI 通過
+- [x] 讀 `calibration/accuracy_baseline.json`，assert `fp16 - int8 <= 0.02`
+- [x] 用 `@pytest.mark.skipif` 讓沒有 baseline 時跳過
+- [ ] 示範 PR：coverage gate 失敗再恢復（待建立）
+- [ ] 示範 PR：accuracy gate 失敗再恢復（待建立）
 
 #### 要提交的 PR（共 2 個）：
-1. `demo/coverage-gate-failing`：新增無測試的模組 → 覆蓋率掉到 <90% → 刪除 → 恢復
-2. `demo/accuracy-gate-failing`：把 int8_map50 人為降低 → 測試失敗 → 恢復
+1. `demo/coverage-gate-failing`：新增無測試的模組 → 覆蓋率掉到 <90% → 刪除 → 恢復 ❌ 待做
+2. `demo/accuracy-gate-failing`：把 int8_map50 人為降低 → 測試失敗 → 恢復 ❌ 待做
 
 ---
 
@@ -263,9 +255,9 @@ edgeai-hw6/
 
 #### D5 — 一次性 GitHub 設定
 - [ ] `sudo mkdir -p /var/lib/edgeai-hw6 && sudo chown $USER:$USER /var/lib/edgeai-hw6`
-- [ ] GitHub → Settings → Environments → `production` → Required reviewers
-- [ ] GitHub Secrets：`JETSON_HOST`, `JETSON_USER`, `JETSON_SSH_KEY`
-- [ ] Workflow permissions → Read and write
+- [x] GitHub → Settings → Environments → `production` → Required reviewers ✅
+- [x] GitHub Secrets：`JETSON_HOST`, `JETSON_USER`, `JETSON_SSH_KEY` ✅
+- [x] Workflow permissions → Read and write ✅
 
 #### D6 — `.github/workflows/deploy.yml`
 - 觸發：`push: tags: ['v[0-9]+.[0-9]+.[0-9]+']`
@@ -441,8 +433,8 @@ ssh -i ~/.ssh/edgeai-hw6 $(whoami)@localhost "echo 'SSH works'"
 提交前必須存在：
 - [ ] 至少一個 semver annotated tag（如 `v1.0.0`）觸發成功部署
 - [ ] `main` 的 branch protection rule（需要全部 CI job + 1 人審查）
-- [ ] `production` environment 設定 required reviewer
-- [ ] self-hosted runner 帶 `jetson` label 且 online
+- [x] `production` environment 設定 required reviewer ✅
+- [x] self-hosted runner 帶 `jetson` label 且已註冊（需重新上線）
 - [ ] 至少一次 main 上全五個 job 通過的 CI run
 - [ ] 至少一次 `v*.*.*` tag push 觸發的成功 deploy run
 - [ ] 一個關閉的 PR 示範 coverage gate 失敗再恢復
