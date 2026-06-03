@@ -87,11 +87,20 @@ class InferenceNode:
 
 
 def main() -> None:  # pragma: no cover
+    import time
+
     from src import healthcheck
 
     healthcheck.start_in_thread()
     node = InferenceNode()
-    node.run()
+    try:
+        node.run()
+    except Exception as exc:
+        logger.error("Inference loop exited: %s", exc)
+    # Keep the process alive so the healthz daemon thread stays up even
+    # when the inference loop ends (e.g. no camera, EOF on video source).
+    while True:
+        time.sleep(60)
 
 
 if __name__ == "__main__":  # pragma: no cover
