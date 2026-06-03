@@ -18,9 +18,7 @@ _PORT = 8000
 
 def _get_power_mode() -> str:
     try:
-        result = subprocess.run(
-            ["nvpmodel", "-q"], capture_output=True, text=True, timeout=5
-        )
+        result = subprocess.run(["nvpmodel", "-q"], capture_output=True, text=True, timeout=5)
         for line in result.stdout.splitlines():
             if "NV Power Mode" in line:
                 return line.split(":")[-1].strip()
