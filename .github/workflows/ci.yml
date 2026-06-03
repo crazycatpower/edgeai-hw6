@@ -101,5 +101,5 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - run: pip3 install pytest paho-mqtt
-      - run: pytest tests/integration/ -v --timeout=600
+      - run: pip3 install pytest paho-mqtt pytest-timeout
+      - run: python3 -m pytest tests/integration/ -v --timeout=600
