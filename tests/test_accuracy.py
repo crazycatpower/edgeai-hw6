@@ -4,6 +4,7 @@
 
 import json
 from pathlib import Path
+
 import pytest
 
 BASELINE_PATH = Path(__file__).parent.parent / "calibration" / "accuracy_baseline.json"
@@ -20,8 +21,7 @@ def test_int8_map_drop_within_threshold():
     int8 = baseline["int8_map50"]
     drop = fp16 - int8
     assert drop <= 0.02, (
-        f"INT8 mAP drop too large: {drop:.4f} > 0.02 "
-        f"(fp16={fp16:.4f}, int8={int8:.4f})"
+        f"INT8 mAP drop too large: {drop:.4f} > 0.02 (fp16={fp16:.4f}, int8={int8:.4f})"
     )
 
 

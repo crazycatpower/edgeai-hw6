@@ -5,7 +5,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import cv2
 import numpy as np
@@ -41,9 +42,7 @@ class InferenceNode:
         resized = cv2.resize(frame, INPUT_SIZE)
         return resized
 
-    def _build_payload(
-        self, detections: list[dict[str, Any]], frame_id: int
-    ) -> dict[str, Any]:
+    def _build_payload(self, detections: list[dict[str, Any]], frame_id: int) -> dict[str, Any]:
         return {
             "frame_id": frame_id,
             "detections": detections,

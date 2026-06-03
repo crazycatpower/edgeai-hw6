@@ -6,8 +6,9 @@ from __future__ import annotations
 
 import json
 import logging
-from dataclasses import dataclass, field
-from typing import Any, Callable
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -40,9 +41,7 @@ class MqttPublisher:
         return client  # pragma: no cover
 
     def connect(self) -> None:
-        self._client.connect(
-            self._config.host, self._config.port, self._config.keepalive
-        )
+        self._client.connect(self._config.host, self._config.port, self._config.keepalive)
         self._client.loop_start()
         self._connected = True
         logger.info("MQTT connected to %s:%d", self._config.host, self._config.port)
