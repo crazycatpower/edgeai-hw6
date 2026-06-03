@@ -29,12 +29,19 @@ def _pull_image() -> None:
 def _start_container(engine_path: str) -> str:
     result = subprocess.run(
         [
-            "docker", "run", "-d",
-            "--runtime", "nvidia",
-            "--network", "host",
-            "--name", "ci-edgeai-test",
-            "-v", f"{engine_path}:/opt/models/best_int8.engine:ro",
-            "-e", "MODEL_PATH=/opt/models/best_int8.engine",
+            "docker",
+            "run",
+            "-d",
+            "--runtime",
+            "nvidia",
+            "--network",
+            "host",
+            "--name",
+            "ci-edgeai-test",
+            "-v",
+            f"{engine_path}:/opt/models/best_int8.engine:ro",
+            "-e",
+            "MODEL_PATH=/opt/models/best_int8.engine",
             IMAGE,
         ],
         capture_output=True,
@@ -45,7 +52,9 @@ def _start_container(engine_path: str) -> str:
     return result.stdout.strip()
 
 
-def _wait_for_healthz(host: str = "localhost", port: int = 8000, timeout: int = 60) -> bool:
+def _wait_for_healthz(
+    host: str = "localhost", port: int = 8000, timeout: int = 60
+) -> bool:
     import urllib.error
     import urllib.request
 
