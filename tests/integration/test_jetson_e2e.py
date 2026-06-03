@@ -21,6 +21,14 @@ WORKSPACE = os.environ.get("GITHUB_WORKSPACE", str(Path(__file__).parent.parent.
 
 
 def _pull_image() -> None:
+    # Skip pull if the image is already cached locally (pre-pulled in CI step).
+    probe = subprocess.run(
+        ["docker", "image", "inspect", IMAGE],
+        capture_output=True,
+        check=False,
+    )
+    if probe.returncode == 0:
+        return
     subprocess.run(["docker", "pull", IMAGE], check=True, timeout=600)
 
 
