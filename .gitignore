@@ -11,4 +11,5 @@ build/
 calibration/calibration_data/
 best.pt
 # best_int8.engine is committed (Part 0 deliverable)
+# models/test_video.mp4 is committed (required by deploy/docker-compose.yml)
 models/*.pt

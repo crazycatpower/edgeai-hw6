@@ -114,5 +114,9 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Install pytest deps (cached on the Jetson)
         run: pip3 install pytest paho-mqtt pytest-timeout
+      - name: Pre-pull image (outside pytest timeout)
+        run: |
+          SHA=$(echo "$GITHUB_SHA" | cut -c1-7)
+          docker pull ghcr.io/${{ github.repository }}:sha-${SHA}
       - name: Run integration test
-        run: python3 -m pytest tests/integration/ -v --timeout=600
+        run: python3 -m pytest tests/integration/ -v --timeout=120

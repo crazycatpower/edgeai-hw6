@@ -1,7 +1,7 @@
 # Copyright (c) 2026 <Your Name(s)>
 # Tatung University — I4210 AI實務專題
 
-path: /home/jetson/edgeai-hw6/calibration/calibration_data
+path: calibration_data
 train: train/images
 val: valid/images
 test: test/images

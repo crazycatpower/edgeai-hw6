@@ -14,10 +14,12 @@ addopts = "--tb=short"
 [tool.coverage.run]
 source = ["src"]
 omit = ["src/__init__.py"]
+branch = true
 
 [tool.coverage.report]
 fail_under = 90
 show_missing = true
+skip_covered = false
 
 [tool.ruff]
 line-length = 100
@@ -25,7 +27,14 @@ target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP"]
-ignore = ["E501"]
+ignore = [
+    "E722",    # bare-except — paho callbacks swallow all exceptions
+    "RUF001",  # ambiguous unicode — false positives in 中文 headers
+    "RUF002",
+    "RUF003",
+    "RUF005",  # collection-literal-concatenation
+    "N802",    # invalid-function-name — http.server do_GET is stdlib-fixed
+]
 
 [tool.mypy]
 python_version = "3.10"
