@@ -50,15 +50,11 @@ def _start_container(engine_path: str) -> str:
     return result.stdout.strip()
 
 
-def _wait_for_healthz(
-    host: str = "localhost", port: int = 8000, timeout: int = 60
-) -> bool:
+def _wait_for_healthz(host: str = "localhost", port: int = 8000, timeout: int = 60) -> bool:
     deadline = time.time() + timeout
     while time.time() < deadline:
         try:
-            with urllib.request.urlopen(
-                f"http://{host}:{port}/healthz", timeout=3
-            ) as resp:
+            with urllib.request.urlopen(f"http://{host}:{port}/healthz", timeout=3) as resp:
                 if resp.status == 200:
                     return True
         except Exception:
@@ -82,8 +78,7 @@ def running_container():
 
 def test_container_healthcheck_responds(running_container):
     assert _wait_for_healthz(timeout=60), (
-        "Healthcheck did not respond within 60 seconds — "
-        "check: docker logs ci-edgeai-test"
+        "Healthcheck did not respond within 60 seconds — check: docker logs ci-edgeai-test"
     )
 
 
