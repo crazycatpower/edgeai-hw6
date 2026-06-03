@@ -7,7 +7,6 @@ from __future__ import annotations
 import os
 import subprocess
 import threading
-import time
 from pathlib import Path
 
 import pytest
@@ -28,9 +27,7 @@ def _pull_and_run_container() -> str:
     use_camera = Path("/dev/video0").exists()
     device_args = ["--device", "/dev/video0"] if use_camera else []
     frame_mount = (
-        []
-        if use_camera
-        else ["-v", f"{SAMPLE_FRAME.resolve()}:/opt/data/sample_frame.jpg:ro"]
+        [] if use_camera else ["-v", f"{SAMPLE_FRAME.resolve()}:/opt/data/sample_frame.jpg:ro"]
     )
     result = subprocess.run(
         [
