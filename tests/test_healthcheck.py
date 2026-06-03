@@ -14,6 +14,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from src.healthcheck import HealthCheckServer, _get_power_mode, start_in_thread
+import src.healthcheck as healthcheck_mod
 
 
 def test_get_power_mode_returns_string():
@@ -83,3 +84,25 @@ def test_healthcheck_server_stop():
     time.sleep(0.1)
     with pytest.raises(Exception):
         urllib.request.urlopen("http://localhost:18084/healthz", timeout=1)
+
+
+def test_get_power_mode_no_match():
+    mock_result = MagicMock()
+    mock_result.stdout = "some unrelated output\n"
+    with patch("subprocess.run", return_value=mock_result):
+        mode = _get_power_mode()
+    assert mode == "unavailable"
+
+
+def test_healthcheck_server_start_oserror():
+    server = HealthCheckServer(port=19001)
+    ready = threading.Event()
+    with patch("src.healthcheck.HTTPServer", side_effect=OSError("address in use")):
+        server.start(ready=ready)
+    assert ready.is_set()
+
+
+def test_start_in_thread_timeout_warning():
+    with patch("threading.Event.wait", return_value=False):
+        server = start_in_thread(port=18086, model_version="timeout-test")
+    server.stop()

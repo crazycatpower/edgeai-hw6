@@ -7,33 +7,28 @@ from __future__ import annotations
 import json
 import logging
 import re
+import subprocess
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
 _MODEL_VERSION = "unknown"
 _PORT = 8000
 
-# Bind-mounted from the Jetson host by docker-compose.yml (read-only).
-# Reading files avoids needing the nvpmodel binary inside the container.
-_NVPMODEL_STATUS = Path("/var/lib/nvpmodel/status")
-_NVPMODEL_CONF = Path("/etc/nvpmodel.conf")
-
 
 def _get_power_mode() -> str:
-    """Read the live nvpmodel power mode from bind-mounted host files."""
     try:
-        if not _NVPMODEL_STATUS.exists() or not _NVPMODEL_CONF.exists():
-            return "unavailable"
-        mode_id = _NVPMODEL_STATUS.read_text().strip()
-        for line in _NVPMODEL_CONF.read_text().splitlines():
-            if f"ID={mode_id}" in line:
-                match = re.search(r"NAME=(\S+)", line)
-                if match:
-                    return match.group(1).rstrip(">").strip()
-        return f"mode-{mode_id}"
+        result = subprocess.run(
+            ["nvpmodel", "-q"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        match = re.search(r"NV Power Mode:\s+(\S+)", result.stdout)
+        if match:
+            return match.group(1)
+        return "unavailable"
     except Exception:
         return "unavailable"
 
