@@ -9,15 +9,15 @@ on:
       - "v[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
-  deploy:
-    name: Deploy (Jetson)
+  # ── Job 1: Re-tag the SHA image as semver on GHCR (cloud runner) ─────────
+  re-tag:
+    name: Re-tag image as semver
     runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}
     permissions:
       contents: read
       packages: write
+    outputs:
+      tag: ${{ steps.tag.outputs.full }}
     steps:
       - uses: actions/checkout@v5
 
@@ -58,16 +58,32 @@ jobs:
               "${SRC}"
           done
 
-      - name: Deploy to Jetson via SSH
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.JETSON_HOST }}
-          username: ${{ secrets.JETSON_USER }}
-          key: ${{ secrets.JETSON_SSH_KEY }}
-          envs: IMAGE_TAG
-          script: |
-            cd ~/edgeai-hw6
-            git pull origin main
-            bash deploy/deploy.sh
+  # ── Job 2: Deploy to Jetson via self-hosted runner (no SSH needed) ────────
+  deploy:
+    name: Deploy (Jetson)
+    runs-on: [self-hosted, linux, arm64, jetson]
+    needs: re-tag
+    environment:
+      name: production
+      url: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Log in to GHCR on Jetson
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | \
+            docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Pull tagged image
+        run: docker pull ghcr.io/${{ github.repository }}:${{ needs.re-tag.outputs.tag }}
+
+      - name: Run deploy.sh on Jetson
         env:
-          IMAGE_TAG: ${{ steps.tag.outputs.full }}
+          IMAGE_TAG: ${{ needs.re-tag.outputs.tag }}
+          DEPLOY_ENV: production
+        run: |
+          chmod +x deploy/deploy.sh deploy/healthcheck.sh deploy/rollback.sh
+          bash deploy/deploy.sh
