@@ -57,10 +57,19 @@ class HealthCheckServer:
         _MODEL_VERSION = model_version
         self._server: HTTPServer | None = None
 
-    def start(self) -> None:
-        self._server = HTTPServer(("", self._port), _HealthHandler)
-        logger.info("HealthCheck listening on port %d", self._port)
-        self._server.serve_forever()
+    def start(self, ready: threading.Event | None = None) -> None:
+        try:
+            # Bind explicitly to 0.0.0.0 so the endpoint is reachable from the host
+            # when the container runs with --network host.
+            self._server = HTTPServer(("0.0.0.0", self._port), _HealthHandler)
+            logger.info("HealthCheck listening on 0.0.0.0:%d", self._port)
+            if ready is not None:
+                ready.set()
+            self._server.serve_forever()
+        except OSError as exc:
+            logger.error("HealthCheck failed to bind port %d: %s", self._port, exc)
+            if ready is not None:
+                ready.set()  # unblock caller even on failure
 
     def stop(self) -> None:
         if self._server:
@@ -69,6 +78,10 @@ class HealthCheckServer:
 
 def start_in_thread(port: int = _PORT, model_version: str = "unknown") -> HealthCheckServer:
     server = HealthCheckServer(port=port, model_version=model_version)
-    thread = threading.Thread(target=server.start, daemon=True)
+    ready = threading.Event()
+    thread = threading.Thread(target=server.start, args=(ready,), daemon=True)
     thread.start()
+    # Wait up to 5 s for the server to bind before returning to the caller.
+    if not ready.wait(timeout=5):
+        logger.warning("HealthCheck server did not signal ready within 5 s")
     return server

@@ -118,5 +118,13 @@ jobs:
         run: |
           SHA=$(echo "$GITHUB_SHA" | cut -c1-7)
           docker pull ghcr.io/${{ github.repository }}:sha-${SHA}
+      - name: Diagnose environment before test
+        run: |
+          echo "=== docker ps ==="
+          docker ps -a
+          echo "=== port 8000 usage ==="
+          ss -tlnp sport = :8000 || true
+          echo "=== remove stale test container ==="
+          docker rm -f ci-edgeai-test || true
       - name: Run integration test
         run: python3 -m pytest tests/integration/ -v --timeout=120

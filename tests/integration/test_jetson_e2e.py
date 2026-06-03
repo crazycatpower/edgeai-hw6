@@ -71,6 +71,26 @@ def _wait_for_healthz(host: str = "localhost", port: int = 8000, timeout: int = 
     return False
 
 
+def _docker_logs(name: str, tail: int = 50) -> str:
+    result = subprocess.run(
+        ["docker", "logs", "--tail", str(tail), name],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return result.stdout + result.stderr
+
+
+def _container_status(cid: str) -> str:
+    result = subprocess.run(
+        ["docker", "inspect", "--format={{.State.Status}}", cid],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return result.stdout.strip()
+
+
 @pytest.fixture(scope="module")
 def running_container():
     engine_path = Path(WORKSPACE) / "best_int8.engine"
@@ -79,15 +99,31 @@ def running_container():
 
     _pull_image()
     subprocess.run(["docker", "rm", "-f", "ci-edgeai-test"], check=False, timeout=10)
+    time.sleep(2)  # ensure port 8000 is released before re-binding
+
     cid = _start_container(str(engine_path))
+
+    # Give the container a moment to initialise before tests start polling.
+    time.sleep(5)
+    status = _container_status(cid)
+    if status != "running":
+        logs = _docker_logs("ci-edgeai-test")
+        pytest.fail(f"Container exited early (status={status!r}).\n--- docker logs ---\n{logs}")
+
     yield cid
+
+    print("\n--- docker logs (last 50 lines) ---")
+    print(_docker_logs("ci-edgeai-test"))
     subprocess.run(["docker", "rm", "-f", cid], check=False, timeout=15)
 
 
 def test_container_healthcheck_responds(running_container):
-    assert _wait_for_healthz(timeout=60), (
-        "Healthcheck did not respond within 60 seconds — check: docker logs ci-edgeai-test"
-    )
+    if not _wait_for_healthz(timeout=60):
+        logs = _docker_logs("ci-edgeai-test")
+        pytest.fail(
+            "Healthcheck did not respond within 60 s — Connection refused.\n"
+            "--- docker logs ---\n" + logs
+        )
 
 
 def test_healthz_returns_healthy(running_container):
