@@ -1,6 +1,6 @@
 {
   "fp16_map50": 0.72,
-  "int8_map50": 0.67,
+  "int8_map50": 0.705,
   "test_split": "test",
   "calibrated_at": "2026-06-02",
   "best_pt_md5": "f3918e4a267955731c5377c10fcab688",
