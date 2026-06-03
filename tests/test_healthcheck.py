@@ -14,7 +14,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from src.healthcheck import HealthCheckServer, _get_power_mode, start_in_thread
-import src.healthcheck as healthcheck_mod
 
 
 def test_get_power_mode_returns_string():
