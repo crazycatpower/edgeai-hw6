@@ -4,8 +4,8 @@
 
 from unittest.mock import MagicMock
 
-from src.mqtt_publisher import MqttPublisher, PublisherConfig
 from src.inference_node import InferenceNode
+from src.mqtt_publisher import MqttPublisher
 
 
 def test_mqtt_publisher_instantiates():
