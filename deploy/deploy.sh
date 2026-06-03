@@ -24,10 +24,19 @@ print(profile.get('production', '15W'))
 ")
 echo "[deploy] Setting nvpmodel to ${POWER_MODE}"
 
-declare -A POWER_IDS=(["MAXN"]="0" ["10W"]="1" ["15W"]="2" ["7W"]="3")
-POWER_ID="${POWER_IDS[$POWER_MODE]:-2}"
-sudo nvpmodel -m "${POWER_ID}" || echo "[deploy] WARNING: nvpmodel failed, continuing"
-sudo jetson_clocks || echo "[deploy] WARNING: jetson_clocks failed, continuing"
+# Resolve mode NAME -> numeric ID from the Jetson's own nvpmodel.conf
+# so the mapping is correct for any Orin Nano SKU.
+MODE_ID=$(grep -oE "<[[:space:]]*POWER_MODEL[[:space:]]+ID=[0-9]+[[:space:]]+NAME=${POWER_MODE}[[:space:]]*>" \
+    /etc/nvpmodel.conf 2>/dev/null \
+    | grep -oE "ID=[0-9]+" | cut -d= -f2 | head -1)
+
+if [ -z "${MODE_ID}" ]; then
+    echo "[deploy] WARNING: power mode '${POWER_MODE}' not found in /etc/nvpmodel.conf, skipping"
+else
+    echo "[deploy] Resolved ${POWER_MODE} -> ID=${MODE_ID}"
+    sudo nvpmodel -m "${MODE_ID}" || echo "[deploy] WARNING: nvpmodel failed, continuing"
+    sudo jetson_clocks || echo "[deploy] WARNING: jetson_clocks failed, continuing"
+fi
 
 # Step 2: Save current tag as previous
 mkdir -p "${STATE_DIR}"

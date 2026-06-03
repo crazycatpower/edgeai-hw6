@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import subprocess
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -18,11 +19,16 @@ _PORT = 8000
 
 def _get_power_mode() -> str:
     try:
-        result = subprocess.run(["nvpmodel", "-q"], capture_output=True, text=True, timeout=5)
-        for line in result.stdout.splitlines():
-            if "NV Power Mode" in line:
-                return line.split(":")[-1].strip()
-        return "unknown"
+        result = subprocess.run(
+            ["nvpmodel", "-q"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        match = re.search(r"NV Power Mode:\s+(\S+)", result.stdout)
+        if match:
+            return match.group(1)
+        return "unavailable"
     except Exception:
         return "unavailable"
 
