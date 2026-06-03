@@ -10,13 +10,18 @@ on:
 
 jobs:
   deploy:
+    name: Deploy (Jetson)
     runs-on: ubuntu-latest
-    environment: production
+    environment:
+      name: production
+      url: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}
     permissions:
       contents: read
       packages: write
     steps:
       - uses: actions/checkout@v5
+
+      - uses: docker/setup-buildx-action@v3
 
       - uses: docker/login-action@v3
         with:
@@ -36,7 +41,7 @@ jobs:
           SHA_TAG=$(git rev-parse --short HEAD)
           echo "sha=sha-${SHA_TAG}" >> $GITHUB_OUTPUT
 
-      - name: Re-tag image (no rebuild)
+      - name: Re-tag image as semver (no rebuild)
         run: |
           SRC="ghcr.io/${{ github.repository }}:${{ steps.tag.outputs.sha }}"
           for TAG in \
@@ -49,17 +54,16 @@ jobs:
               "${SRC}"
           done
 
-      - name: Deploy to Jetson
+      - name: Deploy to Jetson via SSH
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.JETSON_HOST }}
           username: ${{ secrets.JETSON_USER }}
           key: ${{ secrets.JETSON_SSH_KEY }}
-          envs: FULL_TAG
+          envs: IMAGE_TAG
           script: |
-            export IMAGE_TAG=${{ steps.tag.outputs.full }}
             cd ~/edgeai-hw6
             git pull origin main
             bash deploy/deploy.sh
         env:
-          FULL_TAG: ${{ steps.tag.outputs.full }}
+          IMAGE_TAG: ${{ steps.tag.outputs.full }}

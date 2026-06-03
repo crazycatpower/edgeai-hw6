@@ -11,10 +11,11 @@ on:
 
 jobs:
   lint:
+    name: Ruff lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.10"
           cache: pip
@@ -23,11 +24,12 @@ jobs:
       - run: ruff check .
 
   test:
+    name: Pytest + coverage
     runs-on: ubuntu-latest
     needs: lint
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.10"
           cache: pip
@@ -37,28 +39,33 @@ jobs:
             --ignore=tests/integration \
             --cov=src \
             --cov-report=html:htmlcov \
+            --cov-report=term-missing \
             --cov-fail-under=90 \
             -v
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
-          name: coverage-report
+          name: coverage-html
           path: htmlcov/
 
   security-scan:
+    name: Bandit + pip-audit
     runs-on: ubuntu-latest
     needs: lint
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.10"
           cache: pip
       - run: pip install bandit pip-audit
-      - run: bandit -r src/ -ll
-      - run: pip-audit --strict -r requirements.txt
+      - name: Bandit (Python SAST)
+        run: bandit -r src/ -ll
+      - name: pip-audit (CVE scan on deps)
+        run: pip-audit --strict -r requirements.txt
 
   build:
+    name: Build & push ARM64 image
     runs-on: ubuntu-latest
     needs: [test, security-scan]
     permissions:
@@ -66,6 +73,8 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v5
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -83,10 +92,12 @@ jobs:
           context: .
           file: Dockerfile.ci
           push: true
+          platforms: linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
   integration-test:
+    name: Integration test (Jetson)
     runs-on: [self-hosted, linux, arm64, jetson]
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -101,5 +112,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - run: pip3 install pytest paho-mqtt pytest-timeout
-      - run: python3 -m pytest tests/integration/ -v --timeout=600
+      - name: Install pytest deps (cached on the Jetson)
+        run: pip3 install pytest paho-mqtt pytest-timeout
+      - name: Run integration test
+        run: python3 -m pytest tests/integration/ -v --timeout=600
