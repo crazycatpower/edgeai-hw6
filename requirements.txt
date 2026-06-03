@@ -7,4 +7,4 @@ bandit
 pylint
 numpy
 opencv-python-headless
-paho-mqtt
+paho-mqtt>=2.0

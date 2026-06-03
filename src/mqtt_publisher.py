@@ -36,9 +36,14 @@ class MqttPublisher:
         if factory is not None:
             return factory(self._config.client_id)
         import paho.mqtt.client as mqtt  # pragma: no cover
+        from paho.mqtt.enums import CallbackAPIVersion  # pragma: no cover
 
-        client = mqtt.Client(self._config.client_id)  # pragma: no cover
-        return client  # pragma: no cover
+        # paho-mqtt 2.0+ requires callback_api_version; VERSION1 keeps
+        # the legacy on_connect/on_message signature for compatibility.
+        return mqtt.Client(  # pragma: no cover
+            callback_api_version=CallbackAPIVersion.VERSION1,
+            client_id=self._config.client_id,
+        )
 
     def connect(self) -> None:
         self._client.connect(self._config.host, self._config.port, self._config.keepalive)
