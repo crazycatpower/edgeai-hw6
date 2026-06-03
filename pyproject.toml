@@ -42,7 +42,13 @@ ignore_missing_imports = true
 strict = false
 
 [tool.bandit]
-skips = []
+skips = [
+    # B104: hardcoded_bind_all_interfaces — the healthz HTTP server must bind
+    # to 0.0.0.0 so it is reachable from the host when the container runs with
+    # --network host on the Jetson. Binding to localhost only would make the
+    # endpoint invisible to deploy/healthcheck.sh running on the host.
+    "B104",
+]
 targets = ["src"]
 
 [tool.pylint.messages_control]
