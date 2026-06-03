@@ -37,10 +37,22 @@ if [ -f "${STATE_FILE}" ]; then
 fi
 
 # Step 3: Pull and restart
+# Auto-detect Docker Compose V2 plugin or fall back to standalone V1
+if docker compose version > /dev/null 2>&1; then
+    COMPOSE_CMD="docker compose"
+elif command -v docker-compose > /dev/null 2>&1; then
+    COMPOSE_CMD="docker-compose"
+else
+    echo "[deploy] ERROR: neither 'docker compose' nor 'docker-compose' found"
+    exit 1
+fi
+echo "[deploy] Using compose command: ${COMPOSE_CMD}"
+
 export IMAGE_TAG
 cd "${SCRIPT_DIR}"
-docker compose -f "${COMPOSE_FILE}" pull
-docker compose -f "${COMPOSE_FILE}" up -d --force-recreate
+${COMPOSE_CMD} -f "${COMPOSE_FILE}" pull || \
+    echo "[deploy] WARNING: pull failed, using local cache"
+${COMPOSE_CMD} -f "${COMPOSE_FILE}" up -d --force-recreate
 
 # Step 4: Health check
 echo "[deploy] Running health check..."

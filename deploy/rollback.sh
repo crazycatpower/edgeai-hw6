@@ -23,13 +23,23 @@ CURRENT_TAG=$(cat "${STATE_FILE}" 2>/dev/null || echo "unknown")
 echo "[rollback] Current tag: ${CURRENT_TAG}"
 echo "[rollback] Rolling back to: ${ROLLBACK_TAG}"
 
+# Auto-detect Docker Compose V2 plugin or fall back to standalone V1
+if docker compose version > /dev/null 2>&1; then
+    COMPOSE_CMD="docker compose"
+elif command -v docker-compose > /dev/null 2>&1; then
+    COMPOSE_CMD="docker-compose"
+else
+    echo "[rollback] ERROR: neither 'docker compose' nor 'docker-compose' found"
+    exit 1
+fi
+
 # Pull old image (best-effort)
 export IMAGE_TAG="${ROLLBACK_TAG}"
 cd "${SCRIPT_DIR}"
-docker compose -f "${COMPOSE_FILE}" pull || true
+${COMPOSE_CMD} -f "${COMPOSE_FILE}" pull || true
 
 # Restart with old tag
-docker compose -f "${COMPOSE_FILE}" up -d --force-recreate
+${COMPOSE_CMD} -f "${COMPOSE_FILE}" up -d --force-recreate
 
 # Health check
 echo "[rollback] Running health check on rolled-back service..."
