@@ -45,6 +45,20 @@ jobs:
           SHA_TAG=$(git rev-parse --short HEAD)
           echo "sha=sha-${SHA_TAG}" >> $GITHUB_OUTPUT
 
+      - name: Wait for SHA image to be available in GHCR
+        run: |
+          IMG="ghcr.io/${{ github.repository }}:${{ steps.tag.outputs.sha }}"
+          echo "Waiting for ${IMG}..."
+          for i in $(seq 1 20); do
+            if docker manifest inspect "${IMG}" > /dev/null 2>&1; then
+              echo "✅ Image available after attempt ${i}"
+              exit 0
+            fi
+            echo "Attempt ${i}/20 — not ready yet, retrying in 30s"
+            sleep 30
+          done
+          echo "❌ Image not available after 10 min" && exit 1
+
       - name: Re-tag image as semver (no rebuild)
         run: |
           SRC="ghcr.io/${{ github.repository }}:${{ steps.tag.outputs.sha }}"
