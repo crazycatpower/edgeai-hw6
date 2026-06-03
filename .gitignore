@@ -11,3 +11,5 @@ build/
 calibration/calibration_data/
 best.pt
 # best_int8.engine is committed (Part 0 deliverable)
+models/*.mp4
+models/*.pt
