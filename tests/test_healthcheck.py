@@ -7,12 +7,13 @@ from __future__ import annotations
 import json
 import threading
 import time
+import urllib.error
 import urllib.request
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.healthcheck import HealthCheckServer, start_in_thread, _get_power_mode
+from src.healthcheck import HealthCheckServer, _get_power_mode, start_in_thread
 
 
 def test_get_power_mode_returns_string():

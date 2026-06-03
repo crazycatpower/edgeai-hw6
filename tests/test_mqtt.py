@@ -2,8 +2,9 @@
 # Copyright (c) 2026 <Your Name(s)>
 # Tatung University — I4210 AI實務專題
 
-from unittest.mock import MagicMock, call
 import json
+from unittest.mock import MagicMock
+
 import pytest
 
 from src.mqtt_publisher import MqttPublisher, PublisherConfig

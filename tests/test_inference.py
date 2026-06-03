@@ -3,11 +3,11 @@
 # Tatung University — I4210 AI實務專題
 
 from unittest.mock import MagicMock, patch
+
 import numpy as np
 import pytest
-import cv2
 
-from src.inference_node import InferenceNode, CONFIDENCE_THRESHOLD, INPUT_SIZE
+from src.inference_node import INPUT_SIZE, InferenceNode
 
 
 @pytest.fixture()
