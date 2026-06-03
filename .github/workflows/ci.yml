@@ -60,7 +60,7 @@ jobs:
           cache: pip
       - run: pip install bandit pip-audit
       - name: Bandit (Python SAST)
-        run: bandit -r src/ -ll
+        run: bandit -r src/ -ll -c pyproject.toml
       - name: pip-audit (CVE scan on deps)
         run: pip-audit --strict -r requirements.txt
 
