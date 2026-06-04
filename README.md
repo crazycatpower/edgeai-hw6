@@ -150,7 +150,7 @@ For N Jetson devices:
 
 ## Reflections
 
-### Member 1
+### 黃義鈞
 
 **Parts completed**: Part 0 (INT8 calibration), Part A (test refactoring), Part B (CI workflow design)
 
