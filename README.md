@@ -152,13 +152,13 @@ For N Jetson devices:
 
 ### 黃義鈞
 
-**Parts completed**: Part 0 (INT8 calibration), Part A (test refactoring), Part B (CI workflow design)
+**負責部分**：Part 0（INT8 TensorRT 校準與 engine 產出）、Part C（Jetson 硬體環境準備、self-hosted runner 安裝與維護）、Part D（GitHub Secrets 設定、production environment required reviewers、deploy 人工審批）、Part E（rollback 實機驗證）、整體 Jetson 硬體操作與網路環境排除
 
-**Hardest technical problem**: Getting INT8 TensorRT export to work on Jetson. Initial attempts failed with `CUDA out of memory` during calibration. Tried reducing batch size from 8 to 1 and workspace from 8GB to 4GB — that resolved it. Key insight: INT8 calibration needs representative data distribution, not just quantity.
+**最困難的技術問題**：學校網路有 captive portal，Jetson runner 無法直接連上 GitHub。一開始嘗試在 runner 設定 `HTTPS_PROXY=socks5://127.0.0.1:1080`，搭配 SSH reverse tunnel 從筆電橋接出去，但 Node.js 24 的 undici 不支援 `socks5://` scheme，導致 `actions/checkout` 一直失敗。後來發現 Jetson 其實可以直接繞過 captive portal 連到 GitHub，把 proxy 移掉之後 runner 才正常上線。
 
-**What I learned**: The lazy import pattern for `ultralytics`/`torch` was new to me. These libraries pull in CUDA at import time, which breaks x86 CI. Wrapping them in `# pragma: no cover` functions lets the CI test all other logic without touching GPU code.
+**學到的事**：Self-hosted runner 的網路環境和開發機完全不同，不能想當然爾。`GITHUB_ACTIONS_RUNNER_TLS_NO_VERIFY=1` 可以讓 runner registration 跳過 SSL 檢查，但 job 執行時 `actions/checkout` 用的是 Node.js 內建的 HTTP client，設定方式完全不同。另外 INT8 校準時 `trtexec` 在 Jetson 上跑要用 DeepStream container 才有完整的 TRT 環境，直接裝 onnxruntime 是不夠的。
 
-**What I'd do differently**: Set up the self-hosted runner in Week 1 instead of Week 3. Half our debugging time was spent on runner connectivity issues that had nothing to do with the actual code.
+**下次會不同的做法**：第一天就先確認 runner 能不能連到 GitHub，再開始寫任何 workflow。這次花了將近一整天在排查網路問題，才發現根本原因只是 proxy 設定衝突。如果一開始先用 `curl https://github.com` 在 Jetson 上測一下連線，可以省掉大量時間。
 
 ---
 
