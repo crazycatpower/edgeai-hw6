@@ -11,7 +11,7 @@ TIMEOUT=60
 REQUIRED_CONSECUTIVE=3
 consecutive=0
 elapsed=0
-interval=5
+interval=3
 
 echo "[healthcheck] Polling ${URL} (need ${REQUIRED_CONSECUTIVE} consecutive successes within ${TIMEOUT}s)"
 

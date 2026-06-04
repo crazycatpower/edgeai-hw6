@@ -33,12 +33,9 @@ else
     exit 1
 fi
 
-# Pull old image (best-effort; may fail if registry is unreachable or token expired)
+# Use the locally cached image — the previous version was already pulled during deploy
 export IMAGE_TAG="${ROLLBACK_TAG}"
 cd "${SCRIPT_DIR}"
-${COMPOSE_CMD} -f "${COMPOSE_FILE}" pull || true
-
-# Restart with old tag — use locally cached image if pull was denied
 ${COMPOSE_CMD} -f "${COMPOSE_FILE}" up -d --force-recreate --pull never
 
 # Health check
