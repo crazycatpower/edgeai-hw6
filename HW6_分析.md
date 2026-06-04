@@ -102,7 +102,7 @@ edgeai-hw6/
 - [x] 建立 `calibration/calibrate_int8.py`（`Int8Calibrator` 類別）
 - [x] 建立 `calibration/calibration.yaml`（nc: 17，construction safety dataset）
 - [x] 執行校準：trtexec --int8 via DeepStream container（TRT 10.3）
-- [ ] 測量 FP16 vs INT8 的 mAP@50（FP16 評估進行中）
+- [x] 測量 FP16 vs INT8 的 mAP@50（FP16=0.7200, INT8=0.7050, drop=1.5%）
 - [x] 填寫 `calibration/accuracy_baseline.json`（md5 + latency 已填，mAP 待補真實值）
 - [x] 提交 `best_int8.engine`（4.4MB，待 push）
 - [x] 寫 `calibration/README.md`（如何重新校準）
@@ -141,12 +141,12 @@ edgeai-hw6/
 #### A5 — `tests/test_accuracy.py` + 示範 PR
 - [x] 讀 `calibration/accuracy_baseline.json`，assert `fp16 - int8 <= 0.02`
 - [x] 用 `@pytest.mark.skipif` 讓沒有 baseline 時跳過
-- [ ] 示範 PR：coverage gate 失敗再恢復（待建立）
-- [ ] 示範 PR：accuracy gate 失敗再恢復（待建立）
+- [x] 示範 PR：coverage gate 失敗再恢復（已完成並關閉）
+- [x] 示範 PR：accuracy gate 失敗再恢復（已完成並關閉）
 
 #### 要提交的 PR（共 2 個）：
-1. `demo/coverage-gate-failing`：新增無測試的模組 → 覆蓋率掉到 <90% → 刪除 → 恢復 ❌ 待做
-2. `demo/accuracy-gate-failing`：把 int8_map50 人為降低 → 測試失敗 → 恢復 ❌ 待做
+1. `demo/coverage-gate-failing`：新增無測試的模組 → 覆蓋率掉到 <90% → 刪除 → 恢復 ✅
+2. `demo/accuracy-gate-failing`：把 int8_map50 人為降低 → 測試失敗 → 恢復 ✅
 
 ---
 
@@ -254,7 +254,7 @@ edgeai-hw6/
 6. 寫入新 tag 到 state file
 
 #### D5 — 一次性 GitHub 設定
-- [ ] `sudo mkdir -p /var/lib/edgeai-hw6 && sudo chown $USER:$USER /var/lib/edgeai-hw6`
+- [x] `sudo mkdir -p /var/lib/edgeai-hw6 && sudo chown $USER:$USER /var/lib/edgeai-hw6`
 - [x] GitHub → Settings → Environments → `production` → Required reviewers ✅
 - [x] GitHub Secrets：`JETSON_HOST`, `JETSON_USER`, `JETSON_SSH_KEY` ✅
 - [x] Workflow permissions → Read and write ✅
@@ -420,25 +420,25 @@ ssh -i ~/.ssh/edgeai-hw6 $(whoami)@localhost "echo 'SSH works'"
 
 | 檔案 | 來源 |
 |------|------|
-| `htmlcov-artifact.png` | CI run 頁面，coverage artifact 下載按鈕 |
-| `production-env-settings.png` | GitHub Settings → Environments → production |
-| `deploy-log-nvpmodel.png` | deploy run log，含 `[deploy] Setting nvpmodel...` |
-| `healthz-curl.png` | `curl http://<jetson>:8000/healthz` 的 JSON 回應 |
-| `rollback-demo.cast` | asciinema 錄影，wall time < 30 秒 |
+| `htmlcov-artifact.png` | CI run 頁面，coverage artifact 下載按鈕 | ✅ |
+| `production-env-settings.png` | GitHub Settings → Environments → production | ✅ |
+| `deploy-log-nvpmodel.png` | deploy run log，含 `[deploy] Setting nvpmodel...` | ✅ |
+| `healthz-curl.png` | `curl http://<jetson>:8000/healthz` 的 JSON 回應 | ✅ |
+| `rollback-demo.cast` | asciinema 錄影，wall time 20 秒 < 30 秒 | ✅ |
 
 ---
 
 ## GitHub 永久 Artifacts 清單
 
 提交前必須存在：
-- [ ] 至少一個 semver annotated tag（如 `v1.0.0`）觸發成功部署
-- [ ] `main` 的 branch protection rule（需要全部 CI job + 1 人審查）
+- [x] 至少一個 semver annotated tag（v1.0.5 ~ v1.0.10）觸發成功部署 ✅
+- [x] `main` 的 branch protection rule（需要全部 CI job + 1 人審查）✅
 - [x] `production` environment 設定 required reviewer ✅
-- [x] self-hosted runner 帶 `jetson` label 且已註冊（需重新上線）
-- [ ] 至少一次 main 上全五個 job 通過的 CI run
-- [ ] 至少一次 `v*.*.*` tag push 觸發的成功 deploy run
-- [ ] 一個關閉的 PR 示範 coverage gate 失敗再恢復
-- [ ] 一個關閉的 PR 示範 accuracy gate 失敗再恢復
+- [x] self-hosted runner 帶 `jetson` label 且已註冊 ✅
+- [x] 至少一次 main 上全五個 job 通過的 CI run（CI #73）✅
+- [x] 至少一次 `v*.*.*` tag push 觸發的成功 deploy run（v1.0.10）✅
+- [x] 一個關閉的 PR 示範 coverage gate 失敗再恢復 ✅
+- [x] 一個關閉的 PR 示範 accuracy gate 失敗再恢復 ✅
 
 ---
 
