@@ -12,7 +12,7 @@
 
 ```bash
 # Clone and install dependencies
-git clone https://github.com/<org>/edgeai-hw6
+git clone https://github.com/crazycatpower/edgeai-hw6
 cd edgeai-hw6
 pip install -r requirements.txt
 
@@ -178,11 +178,11 @@ For N Jetson devices:
 
 | Requirement | Link |
 |-------------|------|
-| ≥1 semver tag with successful deploy | [v1.0.0 deploy run](https://github.com/<org>/edgeai-hw6/actions) |
-| 5-stage CI all green on main | [CI run](https://github.com/<org>/edgeai-hw6/actions) |
-| Coverage artifact uploaded | [htmlcov artifact](https://github.com/<org>/edgeai-hw6/actions) |
-| production environment with required reviewer | [Settings → Environments](https://github.com/<org>/edgeai-hw6/settings/environments) |
-| Coverage gate failing PR | [demo/coverage-gate-failing](https://github.com/<org>/edgeai-hw6/pulls) |
-| Accuracy gate failing PR | [demo/accuracy-gate-failing](https://github.com/<org>/edgeai-hw6/pulls) |
+| ≥1 semver tag with successful deploy | [v1.0.10 deploy run](https://github.com/crazycatpower/edgeai-hw6/actions/runs/26880251799) |
+| 5-stage CI all green on main | [CI run #73](https://github.com/crazycatpower/edgeai-hw6/actions/runs/26880250588) |
+| Coverage artifact uploaded | [htmlcov artifact](https://github.com/crazycatpower/edgeai-hw6/actions/runs/26880250588) |
+| production environment with required reviewer | [Settings → Environments](https://github.com/crazycatpower/edgeai-hw6/settings/environments) |
+| Coverage gate failing PR | [demo/coverage-gate-failing](https://github.com/crazycatpower/edgeai-hw6/pulls?q=is%3Apr+is%3Aclosed+demo%2Fcoverage-gate-failing) |
+| Accuracy gate failing PR | [demo/accuracy-gate-failing](https://github.com/crazycatpower/edgeai-hw6/pulls?q=is%3Apr+is%3Aclosed+demo%2Faccuracy-gate-failing) |
 | Rollback demo (< 30s) | `evidence/rollback-demo.cast` |
 | `/healthz` JSON response | `evidence/healthz-curl.png` |
